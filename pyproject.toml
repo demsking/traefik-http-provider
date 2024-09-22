@@ -1,0 +1,56 @@
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
+
+[tool.poetry]
+name = "traefik-http-provider"
+version = "1.0.0"
+description = "Traefik HTTP-Provider is a REST service that allows external services to register and expose their Traefik HTTP provider JSON content."
+keywords = ["traefik", "http", "provider"]
+authors = ["Sébastien Demanou <demsking@gmail.com>"]
+license = "Apache-2.0"
+readme = "README.md"
+repository = "https://gitlab.com/demsking/traefik-http-provider"
+documentation = "https://gitlab.com/demsking/traefik-http-provider/-/blob/main/README.md"
+classifiers = [
+  "Development Status :: 2 - Pre-Alpha",
+  "Environment :: Console",
+  "Intended Audience :: Developers",
+  "Topic :: Software Development :: Libraries :: Python Modules",
+  "Topic :: Software Development :: Localization",
+  "License :: OSI Approved :: Apache Software License",
+  "Operating System :: POSIX :: Linux",
+  "Programming Language :: Python :: 3.11",
+]
+
+[tool.poetry.urls]
+"Say Thanks!" = "https://www.buymeacoffee.com/demsking"
+"Source" = "https://gitlab.com/demsking/traefik-http-provider"
+"Tracker" = "https://gitlab.com/demsking/traefik-http-provider/-/issues"
+
+[[tool.poetry.source]]
+name = "test"
+url = "https://test.pypi.org/simple/"
+secondary = true
+
+[tool.poetry.dependencies]
+python = ">=3.11,<3.12"
+fastapi = "^0.111.0"
+uvicorn = {extras = ["standard"], version = "^0.30.0"}
+oremi-core = "^1.0.0b7"
+
+[tool.poetry.group.dev.dependencies]
+pytest = "^8.2.0"
+pytest-cov = "^5.0.0"
+trio = "^0.25.1"
+pytest-asyncio = "^0.23.7"
+pylint = "^3.2.4"
+python-lsp-server = "^1.11.0"
+
+[tool.skjold]
+sources = ["pyup", "gemnasium", "osv", "pypa"]
+report_only = false # Exit with non-zero exit code on findings.
+
+[tool.pytest.ini_options]
+# Function starting with the following pattern are considered for test cases.
+python_functions = "test_"

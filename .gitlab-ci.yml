@@ -1,0 +1,51 @@
+# You can override the included template(s) by including variable overrides
+# SAST customization: https://docs.gitlab.com/ee/user/application_security/sast/#customizing-the-sast-settings
+# Secret Detection customization: https://docs.gitlab.com/ee/user/application_security/secret_detection/pipeline/#customization
+# Dependency Scanning customization: https://docs.gitlab.com/ee/user/application_security/dependency_scanning/#customizing-the-dependency-scanning-settings
+# Container Scanning customization: https://docs.gitlab.com/ee/user/application_security/container_scanning/#customizing-the-container-scanning-settings
+# Note that environment variables can be set in several places
+# See https://docs.gitlab.com/ee/ci/variables/#cicd-variable-precedence
+stages:
+  # - build
+  - test
+  - deploy
+
+variables:
+  GIT_SUBMODULE_STRATEGY: recursive
+
+# docker-build:
+#   stage: build
+#   image: docker:latest
+#   services:
+#     - docker:dind
+#   script:
+#     - docker login -u "$CI_REGISTRY_USER" -p "$CI_REGISTRY_PASSWORD" $CI_REGISTRY
+#     - make docker-build
+#   only:
+#     - main
+
+sast:
+  stage: test
+
+include:
+  - template: Security/SAST.gitlab-ci.yml
+
+generate documentation:
+  stage: deploy
+  image: python:3.11-alpine
+  script:
+    - export PATH="/root/.local/bin:$PATH"
+    - export PYTHONPATH=.:/usr/local/lib/python3.11/site-packages:$PYTHONPATH
+    - export POETRY_HOME=/usr/local
+    - export POETRY_VIRTUALENVS_CREATE=false
+    - apk add --no-cache curl
+    - curl -sSL https://install.python-poetry.org | python3 -
+    - poetry install
+    - pip install "python-dotenv[cli]"
+    - dotenv -f .env run python generate-openapi.py
+    - cp -r doc/ public/
+  artifacts:
+    paths:
+      - public
+  only:
+    - main

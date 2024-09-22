@@ -1,0 +1,11 @@
+.git/
+.github/
+.directory
+.dockerignore
+Dockerfile
+docker-compose.yaml
+test/
+venv/
+notebooks/
+__pycache__
+**/__pycache__

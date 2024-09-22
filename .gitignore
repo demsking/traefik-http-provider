@@ -1,0 +1,10 @@
+htmlcov/
+__pycache__/
+.ruff_cache/
+.directory
+.coverage
+.direnv/
+.hypothesis/
+.ropeproject/
+providers.db
+*.kate-swp
