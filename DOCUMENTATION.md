@@ -32,19 +32,3 @@ HTTP-Provider Docker containers:
 | `LOG_LEVEL`           | Logging level                                                                 | `"info"`                      |
 | `LOG_FILE`            | Log file path                                                                 |                               |
 | `WORKER`              | Number of worker instances                                                    | `multiprocessing.cpu_count()` |
-
-## Running Behind a TLS Termination Proxy
-
-If you need to run Traefik HTTP-Provider behind a TLS termination proxy (such as
-Nginx or Traefik), you must inform Traefik HTTP-Provider to trust the headers
-sent by the proxy that indicate the application is running behind HTTPS. This is
-done by using the `--proxy-headers` option:
-
-```sh
-docker run -d -p 6116:6116 demsking/traefik-http-provider --proxy-headers
-```
-
-By adding the `--proxy-headers` option, Traefik HTTP-Provider will correctly
-interpret the proxy headers indicating that it is operating behind an HTTPS
-proxy. This ensures that the application behaves as expected in a secure
-environment.

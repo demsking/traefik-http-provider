@@ -23,9 +23,6 @@ RUN poetry install --no-root --no-interaction --no-ansi --only=main
 ## Stage 2: Runtime environment
 FROM python:3.11-alpine3.19
 
-# Create a non-root user and group
-RUN addgroup -S olumulo && adduser -S olumulo -G olumulo
-
 # Copy built Python dependencies from the build-env stage
 COPY --from=build-env /usr/local/lib/python3.11/site-packages/ /usr/local/lib/python3.11/site-packages/
 COPY --from=build-env /usr/local/bin/ /usr/local/bin/
@@ -38,8 +35,6 @@ RUN chmod +x /opt/traefik-http-provider/bin/*
 COPY pyproject.toml LICENSE DOCUMENTATION.md /opt/traefik-http-provider/
 COPY pyproject.toml LICENSE /opt/traefik-http-provider/
 COPY server/ /opt/traefik-http-provider/server
-
-USER olumulo
 
 ENV PATH="/opt/traefik-http-provider/bin:/usr/local/bin:$PATH"
 ENV PYTHONPATH="/opt/traefik-http-provider:/usr/local/lib/python3.11/site-packages"

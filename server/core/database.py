@@ -19,19 +19,26 @@ from datetime import timedelta
 
 from oremi_core.vars import getenv
 
+from .logger import logger
 from .merge import deep_merge
 
 
-def get_db_connection():
-  dbname = getenv('PROVIDERS_DATABASE', default='providers.db')
-  connection = sqlite3.connect(dbname)
+def get_dbname() -> str:
+  return getenv('PROVIDERS_DATABASE', default='providers.db')
+
+
+def get_db_connection(dbname: str | None = None):
+  connection = sqlite3.connect(dbname or get_dbname())
   connection.row_factory = sqlite3.Row
 
   return connection
 
 
 def initialize_db() -> None:
-  connection = get_db_connection()
+  dbname = get_dbname()
+
+  logger.info(f'Initializing database {dbname}')
+  connection = get_db_connection(dbname)
   connection.execute('''
     CREATE TABLE IF NOT EXISTS providers (
       sid TEXT PRIMARY KEY,

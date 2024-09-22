@@ -18,8 +18,4 @@
 # Enable exit on error and exit on unset variables
 set -eu
 
-uvicorn server:api $@ \
-  --host 0.0.0.0 \
-  --port 6116 \
-  --access-log \
-  --log-config /opt/traefik-http-provider/server/log-config.json
+python /opt/traefik-http-provider/server

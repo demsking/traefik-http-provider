@@ -19,7 +19,6 @@ import os
 
 import uvicorn.config
 
-from server import api
 from server.core.database import initialize_db
 from server.core.logger import logger
 from server.core.package import APP_NAME
@@ -27,7 +26,10 @@ from server.core.package import APP_VERSION
 
 
 def get_log_config():
-  with open('log-config.json', 'r', encoding='utf-8') as file:
+  current_dir = os.path.dirname(os.path.abspath(__file__))
+  config_filename = os.path.join(current_dir, 'log-config.json')
+
+  with open(config_filename, 'r', encoding='utf-8') as file:
     return json.load(file)
 
 
@@ -41,7 +43,7 @@ def main():
   initialize_db()
 
   uvicorn.run(
-    app=api,
+    app='server:api',
     host='0.0.0.0',
     port=6116,
     workers=workers if not verbose else 1,
