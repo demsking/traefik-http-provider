@@ -13,7 +13,8 @@
 # limitations under the License.
 # ==============================================================================
 from fastapi.testclient import TestClient
-from vikela import api
+
+from server import api
 
 
 def generate_openapi():
