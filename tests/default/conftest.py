@@ -36,3 +36,8 @@ def service1():
       }
     }
   }
+
+
+@pytest.fixture
+def service2(register_service_config_api_config__service_id__post_payload):
+  return register_service_config_api_config__service_id__post_payload

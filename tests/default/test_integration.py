@@ -1,4 +1,3 @@
-import pytest
 from fastapi.testclient import TestClient
 
 from server import api
@@ -7,26 +6,12 @@ from server import api
 client = TestClient(api, backend='asyncio')
 
 
-@pytest.fixture
-def service2(register_provider_api_provider__service_id__post_payload):
-  return register_provider_api_provider__service_id__post_payload
-
-
-def test_register_provider_api_provider__service_id__post(service2):
-  """Register Provider"""
-  path = '/api/provider/service2'
-  response = client.post(path, json=service2)
-
-  assert response.status_code == 200
-  assert response.headers['Content-Type'] == 'application/json'
-  assert response.json() == {'message': 'Provider registered successfully'}
-
 
 def test_integration(service1, service2):
-  client.post('/api/provider/service1', json=service1)
-  client.post('/api/provider/service2', json=service2)
+  client.post('/api/config/service1', json=service1)
+  client.post('/api/config/service2', json=service2)
 
-  response = client.get('/api/provider')
+  response = client.get('/api/config')
 
   assert response.status_code == 200
   assert response.headers['Content-Type'] == 'application/json'
@@ -70,4 +55,3 @@ def test_integration(service1, service2):
       },
     },
   }
-

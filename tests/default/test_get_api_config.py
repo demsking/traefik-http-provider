@@ -6,9 +6,9 @@ from server import api
 client = TestClient(api, backend='asyncio')
 
 
-def test_get_merged_providers_api_provider_get():
-  """Get Merged Providers"""
-  path = '/api/provider'
+def test_get_traefik_config_api_config_get():
+  """Get Traefik Config"""
+  path = '/api/config'
   response = client.get(path)
 
   assert response.status_code == 200

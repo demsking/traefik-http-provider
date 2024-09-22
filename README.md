@@ -9,10 +9,10 @@ updated within the last 30 minutes.
 
 ## Features
 
-- **POST `/api/provider/{service_id}`**: Register or update a service's Traefik
+- **POST `/api/config/{service_id}`**: Register or update a service's Traefik
   HTTP provider configuration.
 
-- **GET `/api/provider`**: Retrieve a merged configuration of all providers
+- **GET `/api/config`**: Retrieve a merged configuration of all providers
   updated in the last 30 minutes.
 
 ## HTTP-Provider Documentation

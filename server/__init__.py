@@ -64,12 +64,12 @@ class SuccessResponse(BaseModel):
   message: str
 
 
-@api.post('/api/provider/{service_id}', responses={
+@api.post('/api/config/{service_id}', responses={
   200: {'description': 'Provider registered successfully'},
   400: {'description': 'Invalid input data'},
   500: {'description': 'Internal database error'},
 })
-async def register_provider(
+async def register_service_config(
   service_id: str,
   config: TrafikServiceConfig = Body(..., examples=[
     {
@@ -113,7 +113,7 @@ async def register_provider(
   return {'message': 'Provider registered successfully'}
 
 
-@api.get('/api/provider', responses={
+@api.get('/api/config', responses={
   200: {
     'description': 'Merged provider configurations',
     'content': {

@@ -3,7 +3,7 @@ import pytest
 
 
 @pytest.fixture
-def register_provider_api_provider__service_id__post_payload():
+def register_service_config_api_config__service_id__post_payload():
   return {
     "http": {
       "routers": {
