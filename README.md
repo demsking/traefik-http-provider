@@ -18,11 +18,11 @@ updated within the last 30 minutes.
 ## HTTP-Provider Documentation
 
 Open the documentation URL to access the API documentation. In your web browser,
-navigate to [https://demsking.gitlab.io/seto](https://demsking.gitlab.io/seto).
+navigate to [https://demsking.gitlab.io/traefik-http-provider](https://demsking.gitlab.io/traefik-http-provider).
 
 ## Contribute
 
-Please follow [CONTRIBUTING.md](https://gitlab.com/demsking/seto/blob/main/CONTRIBUTING.md).
+Please follow [CONTRIBUTING.md](https://gitlab.com/demsking/traefik-http-provider/blob/main/CONTRIBUTING.md).
 
 ## Versioning
 
@@ -42,4 +42,4 @@ See [SemVer.org](https://semver.org/) for more details.
 
 Licensed under the Apache License, Version 2.0 (the "License"); you may not use
 this file except in compliance with the License.
-You may obtain a copy of the License at [LICENSE](https://gitlab.com/demsking/seto/blob/main/LICENSE).
+You may obtain a copy of the License at [LICENSE](https://gitlab.com/demsking/traefik-http-provider/blob/main/LICENSE).
