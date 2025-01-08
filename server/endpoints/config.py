@@ -39,7 +39,7 @@ def create_config_endpoints(api: FastAPI) -> None:
 
   _store = ProviderConfigStore(DATA_PATH)
 
-  @api.post('/api/config/{service_id}', responses={
+  @api.post('/config/{service_id}', responses={
     200: {'description': 'Provider registered successfully'},
     400: {'description': 'Invalid input data'},
     500: {'description': 'Internal Server Error'},
@@ -90,7 +90,7 @@ def create_config_endpoints(api: FastAPI) -> None:
 
     return {'message': 'Provider registered successfully'}
 
-  @api.get('/api/config', responses={
+  @api.get('/config', responses={
     200: {
       'description': 'Merged provider configurations',
       'content': {
