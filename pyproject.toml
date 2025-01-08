@@ -4,7 +4,7 @@ build-backend = "poetry.core.masonry.api"
 
 [tool.poetry]
 name = "traefik-http-provider"
-version = "1.0.1"
+version = "2.0.0"
 description = "Traefik HTTP-Provider is a REST service that allows external services to register and expose their Traefik HTTP provider JSON content."
 keywords = ["traefik", "http", "provider"]
 authors = ["Sébastien Demanou <demsking@gmail.com>"]
@@ -28,16 +28,11 @@ classifiers = [
 "Source" = "https://gitlab.com/demsking/traefik-http-provider"
 "Tracker" = "https://gitlab.com/demsking/traefik-http-provider/-/issues"
 
-[[tool.poetry.source]]
-name = "test"
-url = "https://test.pypi.org/simple/"
-secondary = true
-
 [tool.poetry.dependencies]
 python = ">=3.11,<3.12"
 fastapi = "^0.111.0"
 uvicorn = {extras = ["standard"], version = "^0.30.0"}
-oremi-core = "^1.0.0b7"
+oremi-core = "^1.0.0"
 
 [tool.poetry.group.dev.dependencies]
 pytest = "^8.2.0"
