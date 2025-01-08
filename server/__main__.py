@@ -1,4 +1,4 @@
-# Copyright 2024 Sébastien Demanou. All Rights Reserved.
+# Copyright 2024-2025 Sébastien Demanou. All Rights Reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -19,7 +19,6 @@ import os
 
 import uvicorn.config
 
-from server.core.database import initialize_db
 from server.core.logger import logger
 from server.core.package import APP_NAME
 from server.core.package import APP_VERSION
@@ -40,7 +39,6 @@ def main():
 
   logger.info(f'Starting {APP_NAME}/{APP_VERSION}')
   logger.info(f'Log level: {"DEBUG" if verbose else "INFO"}')
-  initialize_db()
 
   uvicorn.run(
     app='server:api',

@@ -5,6 +5,7 @@
     "default": {
       "()": "uvicorn.logging.DefaultFormatter",
       "fmt": "%(asctime)s - http-provider - %(levelname)-s - %(message)s",
+      "datefmt": "%Y-%m-%d %H:%M:%S",
       "use_colors": true
     },
     "access": {

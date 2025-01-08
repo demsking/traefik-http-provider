@@ -6,7 +6,7 @@ services:
     user: root
     environment:
       EXPIRATION_MINUTES: 5
-      PROVIDERS_DATABASE: '/data/providers.db'
+      DATA_PATH: '/data'
       LOG_LEVEL: 'debug'
     volumes:
       - ./data:/data

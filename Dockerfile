@@ -11,7 +11,7 @@ SHELL ["/bin/ash", "-eo", "pipefail", "-c"]
 
 # Install build dependencies
 RUN apk update \
-  && apk add --no-cache curl=8.9.1-r0 \
+  && apk add --no-cache curl \
   && curl -sSL https://install.python-poetry.org | python3 -
 
 WORKDIR /src
@@ -47,7 +47,7 @@ ENV LOG_LEVEL="info"
 ENV LOG_FILE=
 
 ENV EXPIRATION_MINUTES=30
-ENV PROVIDERS_DATABASE="/data/providers.db"
+ENV DATA_PATH="/data"
 
 EXPOSE 6116
 

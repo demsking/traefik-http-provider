@@ -65,7 +65,7 @@ update:
 	pre-commit autoupdate
 
 clean:
-	rm -rf dist/ /tmp/$(APP_NAME)
+	rm -rf dist/
 
 #
 ## Packaging
@@ -101,7 +101,7 @@ image-test:
 	  --progress plain \
 	  --tag $(IMAGE_NAME):latest \
 	  --build-arg APP_NAME=$(APP_NAME) \
-	  --build-arg APP_VERSION=$(APP_VERSION) \
+	  --build-arg APP_VERSION=$(APP_VERSION)
 
 publish: image-test doc
 	git commit pyproject.toml doc/ -m "Release $(APP_VERSION)"
