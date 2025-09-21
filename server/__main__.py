@@ -34,7 +34,7 @@ def get_log_config():
 
 def main():
   verbose = logger.isEnabledFor(logging.DEBUG)
-  workers = int(os.getenv('WORKER') or '0') or multiprocessing.cpu_count()
+  workers = int(os.getenv('WORKERS') or '0') or multiprocessing.cpu_count()
   log_config = get_log_config() if not verbose else uvicorn.config.LOGGING_CONFIG
 
   logger.info(f'Starting {APP_NAME}/{APP_VERSION}')
