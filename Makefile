@@ -6,6 +6,9 @@ IMAGE_NAME := demsking/$(APP_NAME)
 shell:
 	tmuxinator
 
+stop:
+	tmux kill-session -t traefik-http-proxy
+
 install:
 	poetry install
 
@@ -99,9 +102,12 @@ multiplatform-image: build/context
 image-test:
 	docker build . \
 	  --progress plain \
-	  --tag $(IMAGE_NAME):latest \
+	  --tag $(IMAGE_NAME):test \
 	  --build-arg APP_NAME=$(APP_NAME) \
 	  --build-arg APP_VERSION=$(APP_VERSION)
+
+exec:
+	docker run -it --rm -p 6116:6116 -v DATA_PATH=/tmp $(IMAGE_NAME):test
 
 publish: image-test doc
 	git commit pyproject.toml doc/ -m "Release $(APP_VERSION)"
