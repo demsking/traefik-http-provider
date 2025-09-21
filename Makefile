@@ -106,8 +106,8 @@ image-test:
 	  --build-arg APP_NAME=$(APP_NAME) \
 	  --build-arg APP_VERSION=$(APP_VERSION)
 
-exec:
-	docker run -it --rm -p 6116:6116 -v DATA_PATH=/tmp $(IMAGE_NAME):test
+exec: image-test
+	docker run -it --rm -p 6116:6116 -e WORKERS=1 -v DATA_PATH=/tmp $(IMAGE_NAME):test
 
 publish: image-test doc
 	git commit pyproject.toml doc/ -m "Release $(APP_VERSION)"
