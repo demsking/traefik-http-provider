@@ -21,6 +21,7 @@ from .core.package import APP_NAME
 from .core.package import APP_VERSION
 from .endpoints.config import create_config_endpoints
 from .endpoints.docs import create_docs_endpoints
+from .endpoints.version import create_version_endpoints
 
 
 HTTP_AGENT = f'{APP_NAME}/{APP_VERSION}'
@@ -55,3 +56,4 @@ api = FastAPI(
 
 create_config_endpoints(api)
 create_docs_endpoints(api)
+create_version_endpoints(api)
