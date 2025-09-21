@@ -48,6 +48,7 @@ class ProviderConfig:
 class ProviderConfigStore:
   def __init__(self, directory: str) -> None:
     self.data_directory = Path(directory)
+    self.data_directory.mkdir(parents=True, exist_ok=True)
 
   def insert(self, provider_config: ProviderConfig) -> None:
     file_path = self.data_directory / f'{provider_config.service_id}.json'
