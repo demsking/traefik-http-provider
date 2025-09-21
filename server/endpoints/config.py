@@ -86,7 +86,11 @@ def create_config_endpoints(api: FastAPI) -> None:
 
       _store.insert(data)
     except Exception as exception:
-      raise HTTPException(status_code=500) from exception
+      logger.error("Error registering provider config: %s", str(exception), exc_info=False)
+      raise HTTPException(
+        status_code=500,
+        detail=f"Failed to register provider config for service_id '{service_id}': {exception}",
+      ) from exception
 
     return {'message': 'Provider registered successfully'}
 
@@ -152,6 +156,10 @@ def create_config_endpoints(api: FastAPI) -> None:
 
       merged_data = _store.get_merged_config()
     except Exception as exception:
-      raise HTTPException(status_code=500) from exception
+      logger.error("Error retrieving merged config: %s", str(exception), exc_info=False)
+      raise HTTPException(
+        status_code=500,
+        detail=f"Failed to retrieve merged provider configurations: {exception}",
+      ) from exception
 
     return merged_data
