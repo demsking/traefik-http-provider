@@ -13,36 +13,24 @@
 # limitations under the License.
 # ==============================================================================
 import json
-from dataclasses import asdict
-from dataclasses import dataclass
 from datetime import datetime
 from datetime import timedelta
 from functools import reduce
 from pathlib import Path
 from typing import Any
 
+from pydantic import BaseModel
 from .logger import logger
 from .merge import deep_merge
 
 TrafikServiceConfig = dict[str, Any]
 
 
-@dataclass
-class ProviderConfig:
+class ProviderConfig(BaseModel):
   service_id: str
   config: TrafikServiceConfig
   last_updated: str
 
-  @staticmethod
-  def from_dict(data: dict[str, Any]) -> 'ProviderConfig':
-    return ProviderConfig(
-      service_id=data['service_id'],
-      config=data['config'],
-      last_updated=data['last_updated']
-    )
-
-  def to_dict(self) -> TrafikServiceConfig:
-    return asdict(self)
 
 
 class ProviderConfigStore:
@@ -54,7 +42,7 @@ class ProviderConfigStore:
     file_path = self.data_directory / f'{provider_config.service_id}.json'
 
     with file_path.open('w', encoding='utf-8') as file:
-      json.dump(provider_config.to_dict(), file, indent=2)
+      json.dump(provider_config.model_dump(), file, indent=2)
 
   def get(self, service_id: str) -> ProviderConfig | None:
     file_path = self.data_directory / f'{service_id}.json'
@@ -65,7 +53,7 @@ class ProviderConfigStore:
     with file_path.open('r', encoding='utf-8') as file:
       data = json.load(file)
 
-    return ProviderConfig.from_dict(data)
+    return ProviderConfig.model_validate(data)
 
   def get_all(self) -> list[ProviderConfig]:
     configs = []
@@ -74,7 +62,7 @@ class ProviderConfigStore:
       with file_path.open('r', encoding='utf-8') as file:
         try:
           data = json.load(file)
-          configs.append(ProviderConfig.from_dict(data))
+          configs.append(ProviderConfig.model_validate(data))
         except Exception as exception:
           logger.warning(f'Error while parsing {file_path}: {exception}')
           file_path.unlink()

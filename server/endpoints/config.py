@@ -82,7 +82,7 @@ def create_config_endpoints(api: FastAPI) -> None:
     """
     try:
       current_date = str(datetime.utcnow())
-      data = ProviderConfig(service_id, config, last_updated=current_date)
+      data = ProviderConfig(service_id=service_id, config=config, last_updated=current_date)
 
       _store.insert(data)
     except Exception as exception:
