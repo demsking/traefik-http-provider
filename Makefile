@@ -7,7 +7,7 @@ shell:
 	tmuxinator
 
 stop:
-	tmux kill-session -t traefik-http-proxy
+	tmux kill-session -t $(APP_NAME)
 
 install:
 	poetry install
