@@ -86,7 +86,7 @@ repos:
           '--ignore', 'E1,E501',
         ]
   - repo: https://github.com/charliermarsh/ruff-pre-commit
-    rev: v0.13.1
+    rev: v0.13.3
     hooks:
       - id: ruff
         name: 'Ruff Linter'

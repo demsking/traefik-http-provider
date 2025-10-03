@@ -63,7 +63,7 @@ outdated:
 	poetry show --outdated
 
 update:
-	poetry -C python update
+	poetry update
 	devbox update
 	pre-commit autoupdate
 
@@ -85,8 +85,6 @@ multiplatform-image: build/context
 	  --progress plain \
 	  --tag $(IMAGE_NAME):$(APP_VERSION) \
 	  --tag $(IMAGE_NAME):latest \
-	  --build-arg APP_NAME=$(APP_NAME) \
-	  --build-arg APP_VERSION=$(APP_VERSION) \
 	  --label "org.opencontainers.image.title=$(APP_NAME)" \
 	  --label "org.opencontainers.image.description=$(shell python metadata.py description)" \
 	  --label "org.opencontainers.image.version=$(APP_VERSION)" \
@@ -102,9 +100,7 @@ multiplatform-image: build/context
 image-test:
 	docker build . \
 	  --progress plain \
-	  --tag $(IMAGE_NAME):test \
-	  --build-arg APP_NAME=$(APP_NAME) \
-	  --build-arg APP_VERSION=$(APP_VERSION)
+	  --tag $(IMAGE_NAME):test
 
 exec: image-test
 	docker run -it --rm -p 6116:6116 -e WORKERS=1 -v DATA_PATH=/tmp $(IMAGE_NAME):test
