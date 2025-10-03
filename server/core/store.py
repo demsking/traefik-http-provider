@@ -76,7 +76,7 @@ class ProviderConfigStore:
           data = json.load(file)
           configs.append(ProviderConfig.from_dict(data))
         except Exception as exception:
-          logger.error(f'Error while parsing {file_path}: {exception}')
+          logger.warning(f'Error while parsing {file_path}: {exception}')
           file_path.unlink()
 
     return configs
@@ -95,9 +95,13 @@ class ProviderConfigStore:
 
     for file_path in self.data_directory.glob('*.json'):
       with file_path.open('r', encoding='utf-8') as file:
-        data = json.load(file)
+        try:
+          data = json.load(file)
 
-      last_updated = datetime.fromisoformat(data['last_updated'])
+          last_updated = datetime.fromisoformat(data['last_updated'])
 
-      if last_updated < expiration_time:
-        file_path.unlink()
+          if last_updated < expiration_time:
+            file_path.unlink()
+        except Exception as exception:
+          logger.warning(f'Error while parsing {file_path}: {exception}')
+          file_path.unlink()
