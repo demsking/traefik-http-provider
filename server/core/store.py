@@ -72,13 +72,12 @@ class ProviderConfigStore:
 
     for file_path in self.data_directory.glob('*.json'):
       with file_path.open('r', encoding='utf-8') as file:
-        data = json.load(file)
-
-      try:
-        configs.append(ProviderConfig.from_dict(data))
-      except Exception as exception:
-        logger.error(f'Error while parsing {file_path}: {exception}')
-        file_path.unlink()
+        try:
+          data = json.load(file)
+          configs.append(ProviderConfig.from_dict(data))
+        except Exception as exception:
+          logger.error(f'Error while parsing {file_path}: {exception}')
+          file_path.unlink()
 
     return configs
 
