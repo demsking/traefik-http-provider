@@ -4,7 +4,7 @@ build-backend = "poetry.core.masonry.api"
 
 [tool.poetry]
 name = "traefik-http-provider"
-version = "2.1.0"
+version = "2.1.1"
 description = "Traefik HTTP-Provider is a REST service that allows external services to register and expose their Traefik HTTP provider JSON content."
 keywords = ["traefik", "http", "provider"]
 authors = ["Sébastien Demanou <demsking@gmail.com>"]
