@@ -13,93 +13,106 @@
 # limitations under the License.
 # ==============================================================================
 import json
+import sqlite3
 from datetime import datetime
 from datetime import timedelta
-from functools import reduce
 from pathlib import Path
 from typing import Any
 
-from pydantic import BaseModel
+
 from .logger import logger
 from .merge import deep_merge
 
 TrafikServiceConfig = dict[str, Any]
 
 
-class ProviderConfig(BaseModel):
-  service_id: str
-  config: TrafikServiceConfig
-  last_updated: str
-
-
 class ProviderConfigStore:
-  def __init__(self, directory: str) -> None:
-    self.data_directory = Path(directory)
-    self.data_directory.mkdir(parents=True, exist_ok=True)
+  def __init__(self, db_path: str) -> None:
+    self.db_file = Path(db_path) / 'provider_configs.db'
+    self.db_file.parent.mkdir(parents=True, exist_ok=True)
+    self._init_db()
 
-  def insert(self, provider_config: ProviderConfig) -> None:
-    file_path = self.data_directory / f'{provider_config.service_id}.json'
+  def _init_db(self) -> None:
+    with sqlite3.connect(self.db_file) as conn:
+      conn.execute(
+        """
+        CREATE TABLE IF NOT EXISTS provider_configs (
+          service_id TEXT PRIMARY KEY,
+          config TEXT NOT NULL,
+          last_updated TEXT NOT NULL
+        )
+        """
+      )
+      conn.commit()
 
-    with file_path.open('w', encoding='utf-8') as file:
-      json.dump(provider_config.model_dump(), file, indent=2)
+  def insert(self, service_id: str, config: TrafikServiceConfig) -> None:
+    last_updated = datetime.utcnow().isoformat()
 
-  def get(self, service_id: str) -> ProviderConfig | None:
-    file_path = self.data_directory / f'{service_id}.json'
+    logger.info(f"Inserting config for service {service_id} with last updated {last_updated}")
 
-    if not file_path.exists():
+    with sqlite3.connect(self.db_file) as conn:
+      conn.execute(
+        """
+        INSERT INTO provider_configs (service_id, config, last_updated)
+        VALUES (?, ?, ?)
+        ON CONFLICT(service_id) DO UPDATE SET
+          config = excluded.config,
+          last_updated = excluded.last_updated
+        """,
+        (
+          service_id,
+          json.dumps(config),
+          last_updated,
+        ),
+      )
+      conn.commit()
+
+  def get(self, service_id: str) -> TrafikServiceConfig | None:
+    with sqlite3.connect(self.db_file) as conn:
+      row = conn.execute(
+        'SELECT service_id, config, last_updated FROM provider_configs WHERE service_id = ?',
+        (service_id,),
+      ).fetchone()
+
+    if not row:
       return None
 
-    with file_path.open('r', encoding='utf-8') as file:
-      data = json.load(file)
+    return json.loads(row[1])
 
-    return ProviderConfig.model_validate(data)
+  def get_all(self) -> list[TrafikServiceConfig]:
+    with sqlite3.connect(self.db_file) as conn:
+      rows = conn.execute(
+        'SELECT service_id, config, last_updated FROM provider_configs'
+      ).fetchall()
 
-  def get_all(self) -> list[ProviderConfig]:
-    configs = []
+    configs: list[TrafikServiceConfig] = []
 
-    for file_path in self.data_directory.glob('*.json'):
+    for row in rows:
       try:
-        with file_path.open('r', encoding='utf-8') as file:
-          data = json.load(file)
-
-        configs.append(ProviderConfig.model_validate(data))
-      except Exception as exception:
-        logger.warning(f'Error while parsing {file_path}: {exception}')
-        try:
-          file_path.unlink()
-        except FileNotFoundError:
-          # file was removed concurrently, nothing to do
-          pass
+        configs.append(json.loads(row[1]))
+      except Exception as exc:
+        logger.warning(f"Error parsing row {row}: {exc}")
 
     return configs
 
   def get_merged_config(self) -> TrafikServiceConfig:
     all_configs = self.get_all()
+    merged: TrafikServiceConfig = {}
 
-    return reduce(
-      lambda acc, cfg: deep_merge(acc, cfg.config),
-      all_configs,
-      {}
-    )
+    logger.debug(f"Loaded {len(all_configs)} provider configurations from the database")
+
+    for config in all_configs:
+      merged = deep_merge(merged, config)
+
+    return merged
 
   def delete_old_records(self, expiration_minutes: int) -> None:
     expiration_time = datetime.utcnow() - timedelta(minutes=expiration_minutes)
 
-    for file_path in self.data_directory.glob('*.json'):
-      try:
-        with file_path.open('r', encoding='utf-8') as file:
-          data = json.load(file)
-
-        last_updated = datetime.fromisoformat(data['last_updated'])
-
-        if last_updated < expiration_time:
-          try:
-            file_path.unlink()
-          except FileNotFoundError:
-            pass
-      except Exception as exception:
-        logger.warning(f'Error while parsing {file_path}: {exception}')
-        try:
-          file_path.unlink()
-        except FileNotFoundError:
-          pass
+    logger.debug(f"Deleting records older than {expiration_time.isoformat()}")
+    with sqlite3.connect(self.db_file) as conn:
+      conn.execute(
+        'DELETE FROM provider_configs WHERE last_updated < ?',
+        (expiration_time.isoformat(),),
+      )
+      conn.commit()

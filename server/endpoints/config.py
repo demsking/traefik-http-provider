@@ -12,8 +12,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 # ==============================================================================
-from datetime import datetime
-from typing import Any
 
 from fastapi import Body
 from fastapi import FastAPI
@@ -22,11 +20,8 @@ from oremi_core.vars import getenv
 from pydantic import BaseModel
 
 from ..core.logger import logger
-from ..core.store import ProviderConfig
 from ..core.store import ProviderConfigStore
 from ..core.store import TrafikServiceConfig
-
-TrafikConfig = dict[str, Any]
 
 
 class SuccessResponse(BaseModel):
@@ -81,12 +76,9 @@ def create_config_endpoints(api: FastAPI) -> None:
     a timestamp indicating the last update.
     """
     try:
-      current_date = str(datetime.utcnow())
-      data = ProviderConfig(service_id=service_id, config=config, last_updated=current_date)
-
-      _store.insert(data)
+      _store.insert(service_id, config)
     except Exception as exception:
-      logger.error("Error registering provider config: %s", str(exception), exc_info=False)
+      logger.error('Error registering provider config: %s', str(exception), exc_info=False)
       raise HTTPException(
         status_code=500,
         detail=f"Failed to register provider config for service_id '{service_id}': {exception}",
@@ -140,7 +132,7 @@ def create_config_endpoints(api: FastAPI) -> None:
     },
     500: {'description': 'Internal Server Error'},
   })
-  async def get_traefik_config() -> TrafikConfig:
+  async def get_traefik_config() -> TrafikServiceConfig:
     """
     Retrieve and merge provider configurations updated within the last X minutes.
 
@@ -156,7 +148,7 @@ def create_config_endpoints(api: FastAPI) -> None:
 
       merged_data = _store.get_merged_config()
     except Exception as exception:
-      logger.error("Error retrieving merged config: %s", str(exception), exc_info=False)
+      logger.error('Error retrieving merged config: %s', str(exception), exc_info=False)
       raise HTTPException(
         status_code=500,
         detail=f"Failed to retrieve merged provider configurations: {exception}",
