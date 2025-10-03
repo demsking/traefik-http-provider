@@ -28,9 +28,6 @@
   },
   "shell": {
     "init_hook": [
-      ". $VENV_DIR/bin/activate",
-      "unset PS1",
-      "poetry shell",
       "pre-commit install -f"
     ],
     "scripts": {}
