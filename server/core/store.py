@@ -32,7 +32,6 @@ class ProviderConfig(BaseModel):
   last_updated: str
 
 
-
 class ProviderConfigStore:
   def __init__(self, directory: str) -> None:
     self.data_directory = Path(directory)
@@ -59,13 +58,18 @@ class ProviderConfigStore:
     configs = []
 
     for file_path in self.data_directory.glob('*.json'):
-      with file_path.open('r', encoding='utf-8') as file:
-        try:
+      try:
+        with file_path.open('r', encoding='utf-8') as file:
           data = json.load(file)
-          configs.append(ProviderConfig.model_validate(data))
-        except Exception as exception:
-          logger.warning(f'Error while parsing {file_path}: {exception}')
+
+        configs.append(ProviderConfig.model_validate(data))
+      except Exception as exception:
+        logger.warning(f'Error while parsing {file_path}: {exception}')
+        try:
           file_path.unlink()
+        except FileNotFoundError:
+          # file was removed concurrently, nothing to do
+          pass
 
     return configs
 
@@ -82,14 +86,20 @@ class ProviderConfigStore:
     expiration_time = datetime.utcnow() - timedelta(minutes=expiration_minutes)
 
     for file_path in self.data_directory.glob('*.json'):
-      with file_path.open('r', encoding='utf-8') as file:
-        try:
+      try:
+        with file_path.open('r', encoding='utf-8') as file:
           data = json.load(file)
 
-          last_updated = datetime.fromisoformat(data['last_updated'])
+        last_updated = datetime.fromisoformat(data['last_updated'])
 
-          if last_updated < expiration_time:
+        if last_updated < expiration_time:
+          try:
             file_path.unlink()
-        except Exception as exception:
-          logger.warning(f'Error while parsing {file_path}: {exception}')
+          except FileNotFoundError:
+            pass
+      except Exception as exception:
+        logger.warning(f'Error while parsing {file_path}: {exception}')
+        try:
           file_path.unlink()
+        except FileNotFoundError:
+          pass
