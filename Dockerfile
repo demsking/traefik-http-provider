@@ -1,54 +1,54 @@
 #
-## Stage 1: Build environment
-FROM python:3.11-alpine3.19 AS build-env
+## Stage 1: Builder
+FROM python:3.11-alpine AS builder
 
-ENV PATH="/root/.local/bin:$PATH"
-ENV POETRY_HOME='/usr/local'
-ENV POETRY_VIRTUALENVS_CREATE=false
+ENV UV_LINK_MODE=copy
 
 # Set the shell to /bin/ash and enable pipefail
 SHELL ["/bin/ash", "-eo", "pipefail", "-c"]
 
-# Install build dependencies
-RUN apk update \
-  && apk add --no-cache curl \
-  && curl -sSL https://install.python-poetry.org | python3 -
+# Install uv
+COPY --from=ghcr.io/astral-sh/uv:latest /uv /uvx /bin/
 
-WORKDIR /src
-COPY poetry.lock pyproject.toml ./
-RUN poetry install --no-root --no-interaction --no-ansi --only=main
+# Change the working directory
+WORKDIR /opt/demsking
 
+# Install dependencies
+RUN --mount=type=cache,target=/root/.cache/uv \
+    --mount=type=bind,source=uv.lock,target=uv.lock \
+    --mount=type=bind,source=pyproject.toml,target=pyproject.toml \
+    uv sync --no-dev --locked --no-install-project --compile-bytecode
+
+# Sync the project
+COPY pyproject.toml uv.lock README.md ./
+COPY src/ ./src
+RUN --mount=type=cache,target=/root/.cache/uv \
+  uv sync --no-dev --locked \
+    && uv build
 
 #
-## Stage 2: Runtime environment
-FROM python:3.11-alpine3.19
+## Stage 2: Final
+FROM python:3.11-alpine
 
-# Copy built Python dependencies from the build-env stage
-COPY --from=build-env /usr/local/lib/python3.11/site-packages/ /usr/local/lib/python3.11/site-packages/
-COPY --from=build-env /usr/local/bin/ /usr/local/bin/
-
-# Binaries
-COPY bin/* /opt/traefik-http-provider/bin/
-RUN chmod +x /opt/traefik-http-provider/bin/*
-
-# Copy application files
-COPY pyproject.toml LICENSE DOCUMENTATION.md /opt/traefik-http-provider/
-COPY pyproject.toml LICENSE /opt/traefik-http-provider/
-COPY server/ /opt/traefik-http-provider/server
-
-ENV PATH="/opt/traefik-http-provider/bin:/usr/local/bin:$PATH"
-ENV PYTHONPATH="/opt/traefik-http-provider:/usr/local/lib/python3.11/site-packages"
+ENV PATH="/opt/demsking/.venv/bin:$PATH"
+ENV PYTHONPATH="/opt/demsking/.venv/lib/python3.11/site-packages"
 ENV PYTHONUNBUFFERED="1"
 ENV PYTHONDONTWRITEBYTECODE="1"
 
-ENV TZ="Africa/Douala"
-
-ENV LOG_LEVEL="info"
+# Logging configuration
+ENV LOG_LEVEL="INFO"
 ENV LOG_FILE=
 
-ENV EXPIRATION_MINUTES=30
-ENV DATA_PATH="/data"
+# Set the shell to /bin/ash and enable pipefail
+SHELL ["/bin/ash", "-eo", "pipefail", "-c"]
 
+# Copy the environment, but not the source code
+COPY --from=builder /opt/demsking/.venv /opt/demsking/.venv
+COPY --from=builder /opt/demsking/src /opt/demsking/src
+COPY pyproject.toml /opt/demsking/src/pyproject.toml
+COPY DOCUMENTATION.md /opt/demsking/src/DOCUMENTATION.md
+
+# Expose the port
 EXPOSE 6116
 
-ENTRYPOINT ["/opt/traefik-http-provider/bin/entrypoint.sh"]
+ENTRYPOINT ["traefik-http-provider"]

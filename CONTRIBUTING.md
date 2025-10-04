@@ -1,4 +1,4 @@
-# Contributing to Traefik HTTP-Provider
+# Contributing to Traefik HTTP Provider
 
 ## Before Submitting an Issue
 
@@ -78,7 +78,7 @@ Please see the [Makefile](Makefile) for the full list of targets.
 
 ## Contribute
 
-Contributions to Traefik HTTP-Provider are welcome. Here is how you can
+Contributions to Traefik HTTP Provider are welcome. Here is how you can
 contribute:
 
 1. [Submit bugs or a feature request](https://gitlab.com/demsking/traefik-http-provider/issues)

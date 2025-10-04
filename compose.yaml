@@ -7,7 +7,9 @@ services:
     environment:
       EXPIRATION_MINUTES: 5
       DATA_PATH: '/data'
-      LOG_LEVEL: 'debug'
+      LOG_LEVEL: 'DEBUG'
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
     volumes:
       - ./data:/data
     ports:
@@ -17,19 +19,37 @@ services:
         - action: rebuild
           path: Dockerfile
         - action: rebuild
-          path: poetry.lock
+          path: uv.lock
         - action: sync+restart
           path: pyproject.toml
-          target: /opt/traefik-http-provider/pyproject.toml
+          target: /opt/demsking/pyproject.toml
         - action: sync+restart
           path: DOCUMENTATION.md
-          target: /opt/traefik-http-provider/DOCUMENTATION.md
+          target: /opt/demsking/DOCUMENTATION.md
         - action: sync+restart
-          path: server
-          target: /opt/traefik-http-provider/server
-        - action: rebuild
-          path: bin/
-          target: /opt/traefik-http-provider/bin
-    # command: --reload --reload-dir /opt/traefik-http-provider/server --workers 1
-    entrypoint: python /opt/traefik-http-provider/server
+          path: src/
+          target: /opt/demsking/src
+
+  redis:
+    image: redis:8-alpine
+    restart: unless-stopped
+    command:
+      - redis-server
+      - "--appendonly"
+      - "yes"
+      - "--appendfsync"
+      - "everysec"
+      - "--save"
+      - "60 1"
+      - "--maxmemory-policy"
+      - "allkeys-lru"
+      - "--bind"
+      - "0.0.0.0"
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+
+volumes:
+  redis_data:
 ...

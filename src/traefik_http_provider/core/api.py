@@ -1,4 +1,4 @@
-# Copyright 2024 Sébastien Demanou. All Rights Reserved.
+# Copyright 2024-2025 Sébastien Demanou. All Rights Reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -12,17 +12,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 # ==============================================================================
-from collections.abc import Mapping
+from .config import ROOT_PATH
 
 
-def deep_merge(dict1: dict, dict2: dict) -> dict:
-  """Recursively merge two dictionaries."""
-  for key, value in dict2.items():
-    if key in dict1 and isinstance(dict1[key], dict) and isinstance(value, Mapping):
-      # If both values are dicts, recursively merge them
-      deep_merge(dict1[key], value)
-    else:
-      # Otherwise, overwrite the value in dict1
-      dict1[key] = value
-
-  return dict1
+def parse_path(path: str) -> str:
+  return ROOT_PATH + path if len(ROOT_PATH) > 1 else path

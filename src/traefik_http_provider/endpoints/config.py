@@ -12,27 +12,23 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 # ==============================================================================
+import logging
 
 from fastapi import Body
 from fastapi import FastAPI
 from fastapi import HTTPException
-from oremi_core.vars import getenv
 from pydantic import BaseModel
 
-from ..core.logger import logger
-from ..core.store import ProviderConfigStore
-from ..core.store import TrafikServiceConfig
+from ..core.store import ProviderStore
+from ..core.store import TraefikServiceConfig
 
 
 class SuccessResponse(BaseModel):
   message: str
 
 
-def create_config_endpoints(api: FastAPI) -> None:
-  DATA_PATH = getenv('DATA_PATH')
-  EXPIRATION_MINUTES = getenv('EXPIRATION_MINUTES', expected_type=int, default=30)
-
-  _store = ProviderConfigStore(DATA_PATH)
+def create_config_endpoints(api: FastAPI, logger: logging.Logger) -> None:
+  _store = ProviderStore(logger)
 
   @api.post('/config/{service_id}', responses={
     200: {'description': 'Provider registered successfully'},
@@ -41,7 +37,7 @@ def create_config_endpoints(api: FastAPI) -> None:
   })
   async def register_service_config(
     service_id: str,
-    config: TrafikServiceConfig = Body(..., examples=[
+    config: TraefikServiceConfig = Body(..., examples=[
       {
         'http': {
           'routers': {
@@ -54,11 +50,7 @@ def create_config_endpoints(api: FastAPI) -> None:
           'services': {
             'service2': {
               'loadBalancer': {
-                'servers': [
-                  {
-                    'url': 'http://service2:8080',
-                  },
-                ],
+                'servers': [{'url': 'http://service2:8080'}],
               },
             },
           },
@@ -67,22 +59,16 @@ def create_config_endpoints(api: FastAPI) -> None:
     ]),
   ) -> SuccessResponse:
     """
-    Register or update a provider's Traefik configuration.
-
-    This endpoint allows an external service to register or update its Traefik
-    HTTP provider configuration.
-
-    The configuration is stored or replaced in the providers data directory with
-    a timestamp indicating the last update.
+    Register or update a provider's Traefik configuration in Redis.
     """
     try:
       _store.insert(service_id, config)
-    except Exception as exception:
-      logger.error('Error registering provider config: %s', str(exception), exc_info=False)
+    except Exception as exc:
+      logger.error(f"Error registering provider config: {exc}")
       raise HTTPException(
         status_code=500,
-        detail=f"Failed to register provider config for service_id '{service_id}': {exception}",
-      ) from exception
+        detail=f"Failed to register provider config for service_id '{service_id}': {exc}",
+      ) from exc
 
     return {'message': 'Provider registered successfully'}
 
@@ -107,51 +93,32 @@ def create_config_endpoints(api: FastAPI) -> None:
               },
               'services': {
                 'service1': {
-                  'loadBalancer': {
-                    'servers': [
-                      {
-                        'url': 'http://service1:8080'
-                      }
-                    ]
-                  }
+                  'loadBalancer': {'servers': [{'url': 'http://service1:8080'}]}
                 },
                 'service2': {
-                  'loadBalancer': {
-                    'servers': [
-                      {
-                        'url': 'http://service2:8080'
-                      }
-                    ]
-                  }
+                  'loadBalancer': {'servers': [{'url': 'http://service2:8080'}]}
                 }
               }
             }
-          },
-        },
-      },
+          }
+        }
+      }
     },
     500: {'description': 'Internal Server Error'},
   })
-  async def get_traefik_config() -> TrafikServiceConfig:
+  async def get_traefik_config() -> TraefikServiceConfig:
     """
-    Retrieve and merge provider configurations updated within the last X minutes.
-
-    This endpoint retrieves all provider configurations that were updated within
-    the last number of minutes specified by the `EXPIRATION_MINUTES` environment
-    variable. The default is 30 minutes.
-    The configurations are merged into a single JSON object.
+    Retrieve and merge provider configurations stored in Redis.
+    Expired configurations are automatically handled via Redis TTL.
     """
     try:
-      logger.debug('Cleaning outdated data')
-      _store.delete_old_records(EXPIRATION_MINUTES)
-      logger.debug('Old records cleanup complete. Proceeding to fetch providers.')
-
+      logger.debug('Fetching merged provider configuration...')
       merged_data = _store.get_merged_config()
-    except Exception as exception:
-      logger.error('Error retrieving merged config: %s', str(exception), exc_info=False)
+    except Exception as exc:
+      logger.error(f"Error retrieving merged config: {exc}")
       raise HTTPException(
         status_code=500,
-        detail=f"Failed to retrieve merged provider configurations: {exception}",
-      ) from exception
+        detail=f"Failed to retrieve merged provider configurations: {exc}",
+      ) from exc
 
     return merged_data

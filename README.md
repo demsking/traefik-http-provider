@@ -1,8 +1,8 @@
-# Traefik HTTP-Provider
+# Traefik HTTP Provider
 
 [![Buy me a beer](https://img.shields.io/badge/Buy%20me-a%20beer-1f425f.svg)](https://www.buymeacoffee.com/demsking)
 
-Traefik HTTP-Provider is a REST service that allows external services to register
+Traefik HTTP Provider is a REST service that allows external services to register
 and expose their Traefik HTTP provider JSON content. It saves this data to the
 filesystem and allows for retrieval of merged provider data that has been
 updated within the last 30 minutes.

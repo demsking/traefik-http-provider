@@ -1,4 +1,4 @@
-# Copyright 2024 Sébastien Demanou. All Rights Reserved.
+# Copyright 2024-2025 Sébastien Demanou. All Rights Reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -12,17 +12,17 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 # ==============================================================================
-import os
-import sys
-import tomllib
+from collections.abc import Mapping
 
-_current_dir = os.path.dirname(os.path.abspath(__file__))
-_pyproject_path = os.path.join(_current_dir, 'pyproject.toml')
 
-with open(_pyproject_path, 'rb') as file:
-  value = tomllib.load(file)['tool']['poetry'][sys.argv[1]]
+def deep_merge(dict1: dict, dict2: dict) -> dict:
+  """Recursively merge two dictionaries."""
+  for key, value in dict2.items():
+    if key in dict1 and isinstance(dict1[key], dict) and isinstance(value, Mapping):
+      # If both values are dicts, recursively merge them
+      deep_merge(dict1[key], value)
+    else:
+      # Otherwise, overwrite the value in dict1
+      dict1[key] = value
 
-if isinstance(value, list):
-  value = ', '.join(value)
-
-print(value)
+  return dict1

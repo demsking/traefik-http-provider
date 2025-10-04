@@ -1,54 +1,107 @@
-Traefik HTTP-Provider is a REST service that allows external services to
-register and expose their Traefik HTTP provider JSON content. It saves this
-data to the filesystem and allows for retrieval of merged provider data that
-has been updated within the last 30 minutes.
+Traefik HTTP Provider is a REST service that allows external services to
+register and expose their Traefik HTTP provider JSON content. It now stores
+data in Redis for concurrent-safe access and automatically expires data after
+a defined period (default 30 minutes).
 
 ## Deployment
 
 Use the official Docker image [`demsking/traefik-http-provider`](https://hub.docker.com/r/demsking/traefik-http-provider)
-to run Traefik HTTP-Provider:
+and Redis 8 in a Docker Compose setup.
 
-```sh
-docker run -d --env-file <path_to_env_file> -p 6116:6116 demsking/traefik-http-provider
-```
+### Example `docker-compose.yml`
 
-Replace `<path_to_env_file>` with the path to your environment variable file
-containing the necessary configurations.
+```yaml
+version: '3.8'
 
-**Traefik HTTP-Provider Documentation**
+services:
+  server:
+    image: demsking/traefik-http-provider:latest
+    restart: unless-stopped
+    depends_on:
+      - redis
+    environment:
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
+      - EXPIRATION_MINUTES=10
+    ports:
+      - "6116:6116"
 
-Open the documentation URL to access the API documentation. In your web browser,
-navigate to [http://localhost:6116/docs](http://localhost:6116/docs).
+  redis:
+    image: redis:8-alpine
+    restart: unless-stopped
+    command:
+      - redis-server
+      - "--appendonly"
+      - "yes"
+      - "--appendfsync"
+      - "everysec"
+      - "--save"
+      - "60 1"
+      - "--maxmemory-policy"
+      - "allkeys-lru"
+      - "--bind"
+      - "0.0.0.0"
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+
+volumes:
+  redis_data:
+````
+
+Once deployed, access the API documentation at
+[http://localhost:6116/docs](http://localhost:6116/docs).
+
+---
 
 ## Environment Variables
 
-The following environment variables can be used to configure the Traefik
-HTTP-Provider Docker containers:
+### General Configuration
 
-**General Configuration**
+* **EXPIRATION_MINUTES** *(required)*
+  Time window (in minutes) for filtering provider configurations. Default: `10`.
 
-- **EXPIRATION_MINUTES** (required): Specifies the time window (in minutes)
-  for filtering provider configurations. Default is `30`.
+### Redis Configuration
 
-- **TZ**: The timezone for the application. Set this to ensure logs and
-  schedules match your local timezone. (e.g., `"UTC"`, `"Europe/Paris"`).
+* **REDIS_HOST** *(required)*
+  Redis hostname or service name. Example: `redis`.
 
-**Path Configuration**
+* **REDIS_PORT**
+  Redis port. Default: `6379`.
 
-- **DATA_PATH**: Directory path where to store providers data files. Default
-  is `"/data"`.
+* **REDIS_DB**
+  Redis database index to use. Default: `0`.
 
-- **ROOT_PATH**: The root path under which the application operates, useful
-  when the app is hosted behind a reverse proxy. Default is `"/"`.
+### Path Configuration
 
-**Logging and Performance**
+* **ROOT_PATH**
+  Root path under which the app operates (useful behind a reverse proxy). Default: `"/"`.
 
-- **LOG_FILE**: The file where logs will be stored. If left empty, logs will
-  be printed to the console.
+### Logging
 
-- **LOG_LEVEL**: Defines the verbosity of logs. Default is `"INFO"`, but you
-  can set it to other levels like `"DEBUG"` for more detailed output.
+* **LOG_FILE**
+  Path to a log file. If unset, logs are printed to stdout.
 
-- **WORKERS**: The number of worker processes to run for the application. This
-  is set based on the number of CPU cores but can be overridden for
-  performance tuning.
+* **LOG_LEVEL**
+  Log verbosity level (`DEBUG`, `INFO`, `WARNING`, `ERROR`). Default: `INFO`.
+
+---
+
+### Start the Stack
+
+```sh
+docker compose up -d
+```
+
+### Check Logs
+
+```sh
+docker compose logs -f server
+```
+
+### Test API
+
+```sh
+curl http://localhost:6116/api/provider
+```

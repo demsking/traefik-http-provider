@@ -12,12 +12,22 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 # ==============================================================================
-from oremi_core.vars import getenv
+import tomllib
+from pathlib import Path
 
+__all__ = [
+  'APP_DESCRIPTION',
+  'APP_NAME',
+  'APP_VERSION',
+]
 
-ROOT_PATH = getenv('ROOT_PATH', default='/')
-"""The root path for the API, which defines the base URL path for all routes. Default is '/'."""
+PROJECT_DIRECTORY = Path(__file__).resolve().parents[2]
+_pyproject_path = PROJECT_DIRECTORY / 'pyproject.toml'
 
-
-def parse_path(path: str) -> str:
-  return ROOT_PATH + path if len(ROOT_PATH) > 1 else path
+with _pyproject_path.open('rb') as file:
+  package = tomllib.load(file)['project']
+  APP_NAME = package['name']
+  APP_DESCRIPTION = package['description']
+  APP_VERSION = package['version']
+  del package
+  del tomllib

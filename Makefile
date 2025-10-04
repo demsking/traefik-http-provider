@@ -1,5 +1,5 @@
-APP_NAME := $(shell python metadata.py name)
-APP_VERSION := $(shell python metadata.py version)
+APP_NAME := $(shell python scripts/metadata.py name)
+APP_VERSION := $(shell python scripts/metadata.py version)
 IMAGE_NAME := demsking/$(APP_NAME)
 
 # Start the development environment using tmuxinator
@@ -78,6 +78,8 @@ build/context:
 	touch $@
 
 multiplatform-image: build/context
+	@echo "Building $(IMAGE_NAME):$(APP_VERSION)"
+	uv lock
 	docker buildx use $(APP_NAME)
 	docker buildx build . \
 	  --platform linux/amd64,linux/arm64 \
@@ -86,24 +88,22 @@ multiplatform-image: build/context
 	  --tag $(IMAGE_NAME):$(APP_VERSION) \
 	  --tag $(IMAGE_NAME):latest \
 	  --label "org.opencontainers.image.title=$(APP_NAME)" \
-	  --label "org.opencontainers.image.description=$(shell python metadata.py description)" \
+	  --label "org.opencontainers.image.description=$(shell python scripts/metadata.py description)" \
 	  --label "org.opencontainers.image.version=$(APP_VERSION)" \
 	  --label "org.opencontainers.image.revision=$(shell git rev-parse HEAD)" \
-	  --label "org.opencontainers.image.authors=$(shell python metadata.py authors)" \
+	  --label "org.opencontainers.image.authors=Sébastien Demanou <demsking@gmail.com>" \
 	  --label "org.opencontainers.image.created=$(shell date --rfc-3339=seconds)" \
-	  --label "org.opencontainers.image.source=$(shell python metadata.py repository)" \
-	  --label "org.opencontainers.image.url=$(shell python metadata.py repository)" \
-	  --label "org.opencontainers.image.documentation=$(shell python metadata.py documentation)" \
 	  --label "org.opencontainers.image.vendor=Sébastien Demanou" \
-	  --label "org.opencontainers.image.licenses=$(shell python metadata.py license)"
+	  --label "org.opencontainers.image.licenses=$(shell python scripts/metadata.py license)"
 
 image-test:
+	uv lock
 	docker build . \
 	  --progress plain \
 	  --tag $(IMAGE_NAME):test
 
 exec: image-test
-	docker run -it --rm -p 6116:6116 -e WORKERS=1 -v DATA_PATH=/tmp $(IMAGE_NAME):test
+	docker run -it --rm -p 6116:6116 $(IMAGE_NAME):test
 
 publish: image-test doc
 	git commit pyproject.toml doc/ -m "Release $(APP_VERSION)"

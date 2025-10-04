@@ -14,17 +14,53 @@
 # ==============================================================================
 import json
 import logging
-import multiprocessing
 import os
 
-import uvicorn.config
+import uvicorn
+from fastapi import FastAPI
 
-from server.core.logger import logger
-from server.core.package import APP_NAME
-from server.core.package import APP_VERSION
+from .core.api import parse_path
+from .core.logger import create_logger
+from .core.package import APP_NAME
+from .core.package import APP_VERSION
+from .endpoints.config import create_config_endpoints
+from .endpoints.docs import create_docs_endpoints
+from .endpoints.version import create_version_endpoints
 
 
-def get_log_config():
+HTTP_AGENT = f'{APP_NAME}/{APP_VERSION}'
+SERVICE_TITLE = 'Traefik HTTP Provider'
+
+_current_dir = os.path.dirname(os.path.abspath(__file__))
+_readme_path = os.path.realpath(os.path.join(_current_dir, '..', 'DOCUMENTATION.md'))
+
+logger = create_logger()
+
+with open(_readme_path, 'r', encoding='utf-8') as file:
+  SERVICE_DESCRIPTION = file.read()
+
+BASE_PATH = parse_path('/api')
+
+api = FastAPI(
+  docs_url=None,
+  redoc_url=None,
+  title=SERVICE_TITLE,
+  version=APP_VERSION,
+  description=SERVICE_DESCRIPTION,
+  root_path=BASE_PATH,
+  servers=[{'url': BASE_PATH}],
+  license_info={
+    'name': 'Apache 2.0',
+    'url': 'http://www.apache.org/licenses/LICENSE-2.0.html',
+  },
+)
+
+create_config_endpoints(api, logger)
+create_docs_endpoints(api)
+create_version_endpoints(api)
+
+
+def get_log_config() -> dict:
   current_dir = os.path.dirname(os.path.abspath(__file__))
   config_filename = os.path.join(current_dir, 'log-config.json')
 
@@ -32,26 +68,20 @@ def get_log_config():
     return json.load(file)
 
 
-def main():
+def main() -> None:
   verbose = logger.isEnabledFor(logging.DEBUG)
-  workers = int(os.getenv('WORKERS') or '0') or multiprocessing.cpu_count()
   log_config = get_log_config() if not verbose else uvicorn.config.LOGGING_CONFIG
 
   logger.info(f'Starting {APP_NAME}/{APP_VERSION}')
   logger.info(f'Log level: {"DEBUG" if verbose else "INFO"}')
 
   uvicorn.run(
-    app='server:api',
+    app=api,
     host='0.0.0.0',
     port=6116,
-    workers=workers if not verbose else 1,
     server_header=False,
     use_colors=True,
     proxy_headers=True,
     log_level='info',
     log_config=log_config,
   )
-
-
-if __name__ == '__main__':
-  main()
