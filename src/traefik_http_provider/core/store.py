@@ -37,7 +37,7 @@ class ProviderStore:
       host=REDIS_HOST,
       port=REDIS_PORT,
       db=REDIS_DB,
-      password=REDIS_PASSWORD or None,
+      password=REDIS_PASSWORD,
       decode_responses=True,
       socket_timeout=5,
       socket_connect_timeout=5,

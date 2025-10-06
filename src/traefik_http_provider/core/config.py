@@ -39,5 +39,5 @@ REDIS_PORT: int = getenv('REDIS_PORT', expected_type=int, default=6379)
 REDIS_DB: int = getenv('REDIS_DB', expected_type=int, default=0)
 """Redis database index to use. Default is 0."""
 
-REDIS_PASSWORD: str = getenv('REDIS_PASSWORD', default='')
+REDIS_PASSWORD: str | None = getenv('REDIS_PASSWORD', default='') or None
 """Optional Redis password for authenticated connections. Default is empty."""

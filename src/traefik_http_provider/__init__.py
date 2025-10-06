@@ -18,9 +18,18 @@ import os
 
 import uvicorn
 from fastapi import FastAPI
+from contextlib import asynccontextmanager
 
 from .core.api import parse_path
 from .core.logger import create_logger
+from .core.config import EXPIRATION_MINUTES
+from .core.config import LOG_FILE
+from .core.config import LOG_LEVEL
+from .core.config import REDIS_DB
+from .core.config import REDIS_HOST
+from .core.config import REDIS_PORT
+from .core.config import REDIS_PASSWORD
+from .core.config import ROOT_PATH
 from .core.package import APP_NAME
 from .core.package import APP_VERSION
 from .endpoints.config import create_config_endpoints
@@ -41,9 +50,26 @@ with open(_readme_path, 'r', encoding='utf-8') as file:
 
 BASE_PATH = parse_path('/api')
 
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+  # execute the app lifespan at the start of the context manager and at the end
+
+  logger.info(f'Starting {APP_NAME}/{APP_VERSION}')
+  logger.info(f'Log Level: {LOG_LEVEL}')
+  logger.info(f'Log File Path: {LOG_FILE or None}')
+  logger.info(f'Server Root Path: {ROOT_PATH}')
+  logger.info(f'API Base Path: {BASE_PATH}')
+  logger.info(f'Config Expiration Minutes: {EXPIRATION_MINUTES}')
+  logger.info(f'Redis DNS: {REDIS_HOST}:{REDIS_PORT}/{REDIS_DB}')
+  logger.info(f'Redis Password: {"****" if REDIS_PASSWORD else None}')
+  yield
+
+
 api = FastAPI(
   docs_url=None,
   redoc_url=None,
+  lifespan=lifespan,
   title=SERVICE_TITLE,
   version=APP_VERSION,
   description=SERVICE_DESCRIPTION,
@@ -71,9 +97,6 @@ def get_log_config() -> dict:
 def main() -> None:
   verbose = logger.isEnabledFor(logging.DEBUG)
   log_config = get_log_config() if not verbose else uvicorn.config.LOGGING_CONFIG
-
-  logger.info(f'Starting {APP_NAME}/{APP_VERSION}')
-  logger.info(f'Log level: {"DEBUG" if verbose else "INFO"}')
 
   uvicorn.run(
     app=api,
